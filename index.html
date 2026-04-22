@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mohamed Suhail Khan | Platform Engineer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0f172a',
+                            primary: '#0ea5e9',
+                            secondary: '#8b5cf6',
+                            accent: '#2dd4bf'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            background-color: #020617;
+            color: #f8fafc;
+        }
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            /* Prevents the canvas from stealing mouse clicks */
+            pointer-events: none; 
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease-out, border 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        
+        /* 3D element pop-out inside cards */
+        .glass-panel > * {
+            transform: translateZ(30px);
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #0ea5e9, #2dd4bf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* Creative Animated Underline for Nav Links */
+        .nav-link {
+            position: relative;
+            padding-bottom: 2px;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: #0ea5e9;
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Glowing Button Effect */
+        .glowing-btn {
+            position: relative;
+            z-index: 1;
+        }
+        .glowing-btn::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: linear-gradient(45deg, #0ea5e9, #8b5cf6, #2dd4bf, #0ea5e9);
+            z-index: -1;
+            border-radius: 10px;
+            background-size: 400%;
+            animation: glowing 20s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .glowing-btn:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes glowing {
+            0% { background-position: 0 0; }
+            50% { background-position: 400% 0; }
+            100% { background-position: 0 0; }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Scroll Reveal Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-left { transform: translateX(-40px); }
+        .reveal-right { transform: translateX(40px); }
+        .reveal-left.active, .reveal-right.active { transform: translateX(0); }
+        
+        /* Cursor Blink for Typing Effect */
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-brand-primary selection:text-white">
+
+    <!-- 3D Background Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 top-0 transition-all duration-300 glass-panel border-b-0 border-white/10" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <i class="fa-solid fa-terminal text-brand-accent"></i>
+                    <span class="font-mono font-bold text-lg tracking-tighter transform translate-z-[0px]">Suhail<span class="text-brand-primary">.dev</span></span>
+                </div>
+                <div class="hidden md:flex space-x-8 text-sm font-medium items-center">
+                    <a href="#about" class="text-gray-300 hover:text-white transition-colors nav-link">About</a>
+                    <a href="#experience" class="text-gray-300 hover:text-white transition-colors nav-link">Experience</a>
+                    <a href="#projects" class="text-gray-300 hover:text-white transition-colors nav-link">Projects</a>
+                    <a href="#skills" class="text-gray-300 hover:text-white transition-colors nav-link">Skills</a>
+                    <a href="#contact" class="px-5 py-2.5 rounded-full bg-brand-primary/10 text-brand-primary border border-brand-primary/30 hover:bg-brand-primary hover:text-white transition-all transform hover:scale-105 duration-200 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:shadow-[0_0_25px_rgba(14,165,233,0.4)]">Contact Me</a>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-300 hover:text-white focus:outline-none">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden glass-panel border-t border-white/10">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#about" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/5">About</a>
+                <a href="#experience" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/5">Experience</a>
+                <a href="#projects" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/5">Projects</a>
+                <a href="#skills" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-white/5">Skills</a>
+                <a href="#contact" class="block px-3 py-2 rounded-md text-base font-medium text-brand-primary hover:bg-brand-primary/10">Contact Me</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="relative z-10">
+        
+        <!-- Hero Section -->
+        <section class="min-h-screen flex items-center justify-center px-4 pt-20">
+            <div class="max-w-4xl mx-auto text-center perspective-container">
+                <div class="inline-block mb-4 px-3 py-1 rounded-full glass-panel border border-brand-accent/30 text-brand-accent text-xs font-mono animate-fade-in-up hover:border-brand-accent/80 transition-colors cursor-default interactive-card shadow-[0_0_15px_rgba(45,212,191,0.15)]">
+                    <i class="fa-solid fa-circle-nodes mr-2 animate-pulse"></i>Available for new opportunities
+                </div>
+                <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 animate-fade-in-up delay-100">
+                    Mohamed <span class="text-gradient">Suhail Khan</span>
+                </h1>
+                
+                <!-- Typing Effect Area -->
+                <p class="text-xl md:text-2xl text-gray-400 mb-8 font-light max-w-2xl mx-auto animate-fade-in-up delay-200 h-[60px] md:h-[80px]">
+                    Intermediate Platform Engineer specializing in <span class="text-white font-medium">CI/CD</span>, <span class="text-white font-medium">Cloud</span>, and <span class="text-white font-medium">Observability</span>.<br>
+                    <span id="typing-text" class="text-brand-accent font-mono text-lg md:text-xl"></span><span class="cursor-blink text-brand-accent">|</span>
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-300 mb-8">
+                    <a href="#experience" class="px-8 py-3 rounded-lg bg-brand-primary text-white font-semibold hover:bg-brand-primary/80 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-primary/20 hover:-translate-y-1 hover:shadow-brand-primary/40 duration-300">
+                        View My Work <i class="fa-solid fa-arrow-down"></i>
+                    </a>
+                    <!-- Glowing Download CV Button -->
+                    <a href="Mohamed_Suhail_Khan.pdf" download="Mohamed_Suhail_Khan_CV.pdf" class="glowing-btn px-8 py-3 rounded-lg bg-white text-slate-900 font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 hover:-translate-y-1 duration-300">
+                        Download CV <i class="fa-solid fa-file-pdf text-red-500"></i>
+                    </a>
+                </div>
+                
+                <!-- Social Links -->
+                <div class="flex justify-center gap-6 animate-fade-in-up delay-300">
+                    <a href="https://www.linkedin.com/in/mohamed-suhail-khan-9a8a32242" target="_blank" class="text-gray-400 hover:text-brand-primary hover:-translate-y-2 transition-all text-2xl">
+                        <i class="fa-brands fa-linkedin"></i>
+                    </a>
+                    <a href="https://github.com/your-github-username" target="_blank" class="text-gray-400 hover:text-white hover:-translate-y-2 transition-all text-2xl">
+                        <i class="fa-brands fa-github"></i>
+                    </a>
+                    <a href="mailto:mk3490991@gmail.com" class="text-gray-400 hover:text-brand-accent hover:-translate-y-2 transition-all text-2xl">
+                        <i class="fa-solid fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section (The 3 Pillars) -->
+        <section id="about" class="py-20 px-4 reveal">
+            <div class="max-w-7xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center">My Professional <span class="text-brand-secondary">Identity</span></h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Pillar 1 -->
+                    <div class="glass-panel interactive-card rounded-2xl p-8 group">
+                        <div class="w-14 h-14 rounded-full bg-brand-primary/20 flex items-center justify-center mb-6 border border-brand-primary/50 shadow-[0_0_15px_rgba(14,165,233,0.3)] group-hover:scale-110 transition-transform duration-300">
+                            <i class="fa-solid fa-users text-2xl text-brand-primary"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">The Team Player</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            Winning is a collective effort. Working in complex IT and DevOps environments, I thrive on collaboration—mentoring colleagues and learning from them. My goal is to drive success for the entire team.
+                        </p>
+                    </div>
+
+                    <!-- Pillar 2 -->
+                    <div class="glass-panel interactive-card rounded-2xl p-8 group">
+                        <div class="w-14 h-14 rounded-full bg-brand-accent/20 flex items-center justify-center mb-6 border border-brand-accent/50 shadow-[0_0_15px_rgba(45,212,191,0.3)] group-hover:scale-110 transition-transform duration-300">
+                            <i class="fa-solid fa-code-branch text-2xl text-brand-accent"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">The Technical Driver</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            Constantly refining skills in CI/CD, Platform Engineering, and Automation. With a background extending into the MERN stack, I build efficient systems that allow dev teams to deliver value faster.
+                        </p>
+                    </div>
+
+                    <!-- Pillar 3 -->
+                    <div class="glass-panel interactive-card rounded-2xl p-8 group">
+                        <div class="w-14 h-14 rounded-full bg-brand-secondary/20 flex items-center justify-center mb-6 border border-brand-secondary/50 shadow-[0_0_15px_rgba(139,92,246,0.3)] group-hover:scale-110 transition-transform duration-300">
+                            <i class="fa-solid fa-anchor text-2xl text-brand-secondary"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">The Calm Anchor</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            In the fast-paced world of operations, things don't always go to plan. I maintain a steady, analytical mindset to troubleshoot issues, monitor systems via Dynatrace, and deliver results safely.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Experience Timeline -->
+        <section id="experience" class="py-20 px-4 bg-black/30 backdrop-blur-sm border-y border-white/5 reveal">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold mb-16 text-center">Career <span class="text-brand-primary">Journey</span></h2>
+                
+                <div class="relative border-l border-brand-primary/30 ml-3 md:ml-6 space-y-12">
+                    
+                    <!-- Job 1 -->
+                    <div class="relative pl-8 md:pl-12">
+                        <div class="absolute -left-3 md:-left-3.5 top-1.5 w-6 h-6 rounded-full bg-brand-primary border-4 border-[#020617] shadow-[0_0_10px_#0ea5e9]"></div>
+                        <div class="glass-panel interactive-card rounded-xl p-6 md:p-8 hover:border-brand-primary/50">
+                            <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-4">
+                                <div>
+                                    <h3 class="text-xl font-bold text-white">Intermediate Platform Engineer</h3>
+                                    <h4 class="text-brand-primary font-medium">Old Mutual South Africa</h4>
+                                </div>
+                                <span class="mt-2 md:mt-0 px-3 py-1 bg-white/5 rounded-full text-xs font-mono text-gray-400 border border-white/10 w-max">June 2025 - Present</span>
+                            </div>
+                            <p class="text-sm text-gray-300 mb-4 font-medium italic">Building and scaling internal developer platforms bridging code and production.</p>
+                            <ul class="space-y-2 text-sm text-gray-400 list-disc list-outside ml-4">
+                                <li><strong class="text-gray-200">Infrastructure Automation:</strong> Architecting scalable cloud environments using AWS.</li>
+                                <li><strong class="text-gray-200">CI/CD Orchestration:</strong> Engineering robust deployment pipelines in GitLab and Airflow.</li>
+                                <li><strong class="text-gray-200">Observability & Logging:</strong> Implementing robust monitoring strategies via Dynatrace to ensure system reliability and rapid incident response.</li>
+                                <li><strong class="text-gray-200">Automation Tooling:</strong> Custom Python scripting to eliminate manual toil across Azure/Linux.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Job 2 -->
+                    <div class="relative pl-8 md:pl-12">
+                        <div class="absolute -left-3 md:-left-3.5 top-1.5 w-6 h-6 rounded-full bg-gray-600 border-4 border-[#020617]"></div>
+                        <div class="glass-panel interactive-card rounded-xl p-6 md:p-8 hover:border-white/30">
+                            <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-4">
+                                <div>
+                                    <h3 class="text-xl font-bold text-white">Junior Developer</h3>
+                                    <h4 class="text-gray-300 font-medium">Old Mutual South Africa</h4>
+                                </div>
+                                <span class="mt-2 md:mt-0 px-3 py-1 bg-white/5 rounded-full text-xs font-mono text-gray-400 border border-white/10 w-max">Feb 2024 - Jan 2026</span>
+                            </div>
+                            <ul class="space-y-2 text-sm text-gray-400 list-disc list-outside ml-4">
+                                <li><strong class="text-gray-200">TFS to ADO Migration:</strong> Successfully migrated legacy projects to Azure DevOps with zero loss of version history.</li>
+                                <li><strong class="text-gray-200">CI/CD Pipelines:</strong> Designed automated release pipelines from scratch.</li>
+                                <li><strong class="text-gray-200">Cloud Infrastructure:</strong> Mastered AWS core services (EC2, S3, SM) to optimize resources.</li>
+                                <li><strong class="text-gray-200">Full-Stack Context:</strong> Leveraged application architecture knowledge (including MERN stack principles) to improve developer experience and deployment consistency.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Job 3 -->
+                    <div class="relative pl-8 md:pl-12">
+                        <div class="absolute -left-3 md:-left-3.5 top-1.5 w-6 h-6 rounded-full bg-gray-600 border-4 border-[#020617]"></div>
+                        <div class="glass-panel interactive-card rounded-xl p-6 md:p-8 hover:border-white/30">
+                            <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-4">
+                                <div>
+                                    <h3 class="text-xl font-bold text-white">IT Support Technician</h3>
+                                    <h4 class="text-gray-300 font-medium">HUL International</h4>
+                                </div>
+                                <span class="mt-2 md:mt-0 px-3 py-1 bg-white/5 rounded-full text-xs font-mono text-gray-400 border border-white/10 w-max">Sep 2023 - Jan 2024</span>
+                            </div>
+                            <ul class="space-y-2 text-sm text-gray-400 list-disc list-outside ml-4">
+                                <li>Maintained a 95% SLA resolution rate across international branches.</li>
+                                <li>Automated business processes using Microsoft Power Automate, saving ~10 hours weekly.</li>
+                                <li>Achieved 99.9% uptime for in-house Windows/Linux servers.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects & Initiatives Section -->
+        <section id="projects" class="py-20 px-4">
+            <div class="max-w-6xl mx-auto reveal">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-center">Key <span class="text-brand-accent">Projects & Initiatives</span></h2>
+                <p class="text-gray-400 mb-16 text-center max-w-2xl mx-auto">Showcasing major technical challenges solved, architectures designed, and systems implemented across my career.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Project 1: Observability -->
+                    <div class="glass-panel interactive-card rounded-2xl p-6 flex flex-col h-full hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.2)] reveal reveal-left delay-100">
+                        <div class="flex justify-between items-start mb-4">
+                            <i class="fa-solid fa-chart-line text-3xl text-purple-500 transform translate-z-[40px]"></i>
+                            <span class="text-xs font-mono text-purple-400 bg-purple-500/10 px-2 py-1 rounded">Platform</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Dynatrace Observability & Logging</h3>
+                        <p class="text-gray-400 text-sm mb-4 flex-grow">Designed and implemented comprehensive logging strategies. Configured custom Dynatrace dashboards for real-time application and infrastructure monitoring, drastically reducing Mean Time To Resolution (MTTR).</p>
+                        <div class="flex flex-wrap gap-2 mt-auto pt-4 border-t border-white/10">
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">Dynatrace</span>
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">Log Management</span>
+                        </div>
+                    </div>
+
+                    <!-- Project 2: AWS Infra -->
+                    <div class="glass-panel interactive-card rounded-2xl p-6 flex flex-col h-full hover:border-orange-500/50 hover:shadow-[0_0_20px_rgba(249,115,22,0.2)] reveal delay-200">
+                        <div class="flex justify-between items-start mb-4">
+                            <i class="fa-solid fa-server text-3xl text-orange-500 transform translate-z-[40px]"></i>
+                            <span class="text-xs font-mono text-orange-400 bg-orange-500/10 px-2 py-1 rounded">Cloud</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Self-Service Infrastructure Platform</h3>
+                        <p class="text-gray-400 text-sm mb-4 flex-grow">Architected scalable cloud environments providing developers with self-service infrastructure, bridging the gap between code and production using robust GitLab CI pipelines.</p>
+                        <div class="flex flex-wrap gap-2 mt-auto pt-4 border-t border-white/10">
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">AWS (EC2, S3, SM)</span>
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">GitLab CI</span>
+                        </div>
+                    </div>
+
+                    <!-- Project 3: MERN Stack -->
+                    <div class="glass-panel interactive-card rounded-2xl p-6 flex flex-col h-full hover:border-green-500/50 hover:shadow-[0_0_20px_rgba(34,197,94,0.2)] reveal reveal-right delay-300">
+                        <div class="flex justify-between items-start mb-4">
+                            <i class="fa-solid fa-code text-3xl text-green-500 transform translate-z-[40px]"></i>
+                            <span class="text-xs font-mono text-green-400 bg-green-500/10 px-2 py-1 rounded">Full-Stack</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">MERN Stack Architecture</h3>
+                        <p class="text-gray-400 text-sm mb-4 flex-grow">Developed and deployed scalable web applications using the MERN stack. This deep development experience allows me to build better CI/CD pipelines because I thoroughly understand the developer's architecture.</p>
+                        <div class="flex flex-wrap gap-2 mt-auto pt-4 border-t border-white/10">
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">MongoDB</span>
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">React</span>
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">Node.js</span>
+                        </div>
+                    </div>
+
+                    <!-- Project 4: Migration -->
+                    <div class="glass-panel interactive-card rounded-2xl p-6 flex flex-col h-full hover:border-blue-500/50 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] reveal reveal-left delay-100">
+                        <div class="flex justify-between items-start mb-4">
+                            <i class="fa-solid fa-code-merge text-3xl text-blue-500 transform translate-z-[40px]"></i>
+                            <span class="text-xs font-mono text-blue-400 bg-blue-500/10 px-2 py-1 rounded">DevOps</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">TFS to Azure DevOps Migration</h3>
+                        <p class="text-gray-400 text-sm mb-4 flex-grow">Facilitated the organizational transition from legacy Team Foundation Server to Azure DevOps with zero loss of version history, including comprehensive branch policy setup.</p>
+                        <div class="flex flex-wrap gap-2 mt-auto pt-4 border-t border-white/10">
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">Azure DevOps</span>
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">TFS</span>
+                        </div>
+                    </div>
+
+                    <!-- Project 5: Automation -->
+                    <div class="glass-panel interactive-card rounded-2xl p-6 flex flex-col h-full hover:border-brand-secondary/50 hover:shadow-[0_0_20px_rgba(139,92,246,0.2)] reveal delay-200">
+                        <div class="flex justify-between items-start mb-4">
+                            <i class="fa-solid fa-bolt text-3xl text-brand-secondary transform translate-z-[40px]"></i>
+                            <span class="text-xs font-mono text-brand-secondary bg-brand-secondary/10 px-2 py-1 rounded">Automation</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Business Process Automation</h3>
+                        <p class="text-gray-400 text-sm mb-4 flex-grow">Leveraged Microsoft Power Automate to design and deploy automated workflows, replacing manual data entry and reducing administrative labor by ~10 hours per week.</p>
+                        <div class="flex flex-wrap gap-2 mt-auto pt-4 border-t border-white/10">
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">Power Automate</span>
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">Windows Server</span>
+                        </div>
+                    </div>
+
+                    <!-- Project 6: SSM Automation -->
+                    <div class="glass-panel interactive-card rounded-2xl p-6 flex flex-col h-full hover:border-red-500/50 hover:shadow-[0_0_20px_rgba(239,68,68,0.2)] reveal reveal-right delay-300">
+                        <div class="flex justify-between items-start mb-4">
+                            <i class="fa-solid fa-shield-halved text-3xl text-red-500 transform translate-z-[40px]"></i>
+                            <span class="text-xs font-mono text-red-400 bg-red-500/10 px-2 py-1 rounded">DevSecOps</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">AWS SSM Automated Patching</h3>
+                        <p class="text-gray-400 text-sm mb-4 flex-grow">Engineered an automated OS and application patching strategy utilizing AWS Systems Manager (SSM). This ensures continuous security compliance and eliminates the manual toil of routine maintenance.</p>
+                        <div class="flex flex-wrap gap-2 mt-auto pt-4 border-t border-white/10">
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">AWS SSM</span>
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">Python</span>
+                            <span class="text-xs text-gray-300 bg-white/5 px-2 py-1 rounded border border-white/5">Security</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section id="skills" class="py-20 px-4 bg-black/30 backdrop-blur-sm border-t border-white/5 reveal">
+            <div class="max-w-5xl mx-auto text-center">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Technical <span class="text-brand-accent">Arsenal</span></h2>
+                <p class="text-gray-400 mb-12 max-w-2xl mx-auto">A modern stack focused on observability, automation, reliability, and continuous delivery.</p>
+                
+                <div class="flex flex-wrap justify-center gap-4">
+                    <!-- Badges -->
+                    <div class="glass-panel interactive-card px-6 py-3 rounded-full flex items-center gap-2 border border-white/10 hover:border-brand-primary transition-colors cursor-default hover:shadow-[0_0_15px_rgba(14,165,233,0.3)]">
+                        <i class="fa-solid fa-infinity text-brand-primary transform translate-z-[20px]"></i> <span class="font-medium">CI/CD</span>
+                    </div>
+                    <div class="glass-panel interactive-card px-6 py-3 rounded-full flex items-center gap-2 border border-white/10 hover:border-red-500 transition-colors cursor-default hover:shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+                        <i class="fa-brands fa-git-alt text-red-500 transform translate-z-[20px]"></i> <span class="font-medium">Git / Version Control</span>
+                    </div>
+                    <div class="glass-panel interactive-card px-6 py-3 rounded-full flex items-center gap-2 border border-white/10 hover:border-blue-500 transition-colors cursor-default hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                        <i class="fa-brands fa-microsoft text-blue-500 transform translate-z-[20px]"></i> <span class="font-medium">Azure DevOps</span>
+                    </div>
+                    <div class="glass-panel interactive-card px-6 py-3 rounded-full flex items-center gap-2 border border-white/10 hover:border-orange-500 transition-colors cursor-default hover:shadow-[0_0_15px_rgba(249,115,22,0.3)]">
+                        <i class="fa-brands fa-aws text-orange-500 transform translate-z-[20px]"></i> <span class="font-medium">AWS Core Services</span>
+                    </div>
+                    <div class="glass-panel interactive-card px-6 py-3 rounded-full flex items-center gap-2 border border-white/10 hover:border-purple-500 transition-colors cursor-default hover:shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                        <i class="fa-solid fa-chart-line text-purple-500 transform translate-z-[20px]"></i> <span class="font-medium">Dynatrace / Observability</span>
+                    </div>
+                    <div class="glass-panel interactive-card px-6 py-3 rounded-full flex items-center gap-2 border border-white/10 hover:border-green-500 transition-colors cursor-default hover:shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                        <i class="fa-brands fa-node-js text-green-500 transform translate-z-[20px]"></i> <span class="font-medium">MERN Stack</span>
+                    </div>
+                    <div class="glass-panel interactive-card px-6 py-3 rounded-full flex items-center gap-2 border border-white/10 hover:border-orange-600 transition-colors cursor-default hover:shadow-[0_0_15px_rgba(234,88,12,0.3)]">
+                        <i class="fa-brands fa-gitlab text-orange-600 transform translate-z-[20px]"></i> <span class="font-medium">GitLab</span>
+                    </div>
+                    <div class="glass-panel interactive-card px-6 py-3 rounded-full flex items-center gap-2 border border-white/10 hover:border-yellow-400 transition-colors cursor-default hover:shadow-[0_0_15px_rgba(250,204,21,0.3)]">
+                        <i class="fa-brands fa-python text-yellow-400 transform translate-z-[20px]"></i> <span class="font-medium">Python Scripting</span>
+                    </div>
+                    <div class="glass-panel interactive-card px-6 py-3 rounded-full flex items-center gap-2 border border-white/10 hover:border-blue-400 transition-colors cursor-default hover:shadow-[0_0_15px_rgba(96,165,250,0.3)]">
+                        <i class="fa-solid fa-terminal text-blue-400 transform translate-z-[20px]"></i> <span class="font-medium">PowerShell / Linux</span>
+                    </div>
+                    <div class="glass-panel interactive-card px-6 py-3 rounded-full flex items-center gap-2 border border-white/10 hover:border-red-400 transition-colors cursor-default hover:shadow-[0_0_15px_rgba(248,113,113,0.3)]">
+                        <i class="fa-solid fa-wind text-red-400 transform translate-z-[20px]"></i> <span class="font-medium">Apache Airflow</span>
+                    </div>
+                    <div class="glass-panel interactive-card px-6 py-3 rounded-full flex items-center gap-2 border border-white/10 hover:border-gray-400 transition-colors cursor-default hover:shadow-[0_0_15px_rgba(156,163,175,0.3)]">
+                        <i class="fa-solid fa-server text-gray-400 transform translate-z-[20px]"></i> <span class="font-medium">Infrastructure as Code</span>
+                    </div>
+                </div>
+
+                <!-- Education Mini Section -->
+                <div class="mt-20 glass-panel interactive-card rounded-2xl p-8 text-left max-w-3xl mx-auto border-t-4 border-t-brand-secondary">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><i class="fa-solid fa-graduation-cap text-brand-secondary transform translate-z-[20px]"></i> Education</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-semibold text-white">Advanced Diploma in ICT (Application Development)</h4>
+                            <p class="text-sm text-gray-400">Durban University of Technology • 2023</p>
+                        </div>
+                        <hr class="border-white/10">
+                        <div>
+                            <h4 class="font-semibold text-white">Diploma in Computer and Information Sciences</h4>
+                            <p class="text-sm text-gray-400">Durban University of Technology • 2020 - 2022</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer / Contact Section -->
+        <section id="contact" class="py-20 relative">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-brand-primary/20 blur-[100px] rounded-full pointer-events-none"></div>
+            
+            <div class="max-w-7xl mx-auto px-4">
+                <!-- REMOVED interactive-card class from here so typing is stable -->
+                <div class="glass-panel rounded-3xl overflow-hidden border border-white/10">
+                    <div class="grid grid-cols-1 md:grid-cols-2">
+                        
+                        <!-- Contact Info Left Side -->
+                        <div class="p-10 md:p-16 bg-white/5 border-b md:border-b-0 md:border-r border-white/10 flex flex-col justify-between">
+                            <div>
+                                <h2 class="text-3xl font-bold mb-2">Let's Build <span class="text-brand-primary">Together.</span></h2>
+                                <p class="text-gray-400 text-sm mb-12">I'm currently open to new opportunities. Whether you have a question, a project proposal, or just want to connect, feel free to reach out!</p>
+                                
+                                <div class="space-y-6">
+                                    <div class="flex items-center gap-4 group">
+                                        <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-brand-primary group-hover:shadow-[0_0_15px_rgba(14,165,233,0.3)] transition-all duration-300">
+                                            <i class="fa-solid fa-envelope text-brand-primary"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-500 font-mono">Email</p>
+                                            <a href="mailto:mk3490991@gmail.com" class="text-white hover:text-brand-primary transition-colors">mk3490991@gmail.com</a>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-4 group">
+                                        <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-brand-accent group-hover:shadow-[0_0_15px_rgba(45,212,191,0.3)] transition-all duration-300">
+                                            <i class="fa-solid fa-phone text-brand-accent"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-500 font-mono">Phone</p>
+                                            <a href="tel:0671792296" class="text-white hover:text-brand-accent transition-colors">0671792296</a>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-4 group">
+                                        <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-brand-secondary group-hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all duration-300">
+                                            <i class="fa-solid fa-location-dot text-brand-secondary"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-500 font-mono">Location</p>
+                                            <p class="text-white">Durban, KZN, South Africa</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Form Right Side (No Tilt Here) -->
+                        <div class="p-10 md:p-16">
+                            <form action="https://formspree.io/f/mwvarygw" method="POST" class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2 font-mono">Name</label>
+                                    <input type="text" name="name" required class="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-primary focus:shadow-[0_0_10px_rgba(14,165,233,0.2)] transition-all" placeholder="John Doe">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2 font-mono">Email</label>
+                                    <input type="email" name="email" required class="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-primary focus:shadow-[0_0_10px_rgba(14,165,233,0.2)] transition-all" placeholder="john@example.com">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2 font-mono">Message</label>
+                                    <textarea name="message" required rows="4" class="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-primary focus:shadow-[0_0_10px_rgba(14,165,233,0.2)] transition-all resize-none" placeholder="How can I help you?"></textarea>
+                                </div>
+                                <button type="submit" class="w-full bg-brand-primary text-white font-bold rounded-lg px-4 py-3 hover:bg-brand-primary/80 transition-all shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/40 hover:-translate-y-1">
+                                    Send Message <i class="fa-solid fa-paper-plane ml-2"></i>
+                                </button>
+                            </form>
+                        </div>
+                        
+                    </div>
+                </div>
+                <div class="mt-12 text-center text-xs text-gray-600 font-mono">
+                    &copy; 2026 Mohamed Suhail Khan. Designed for high availability.
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Three.js Interactive Background Script -->
+    <script type="module">
+        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js';
+
+        const container = document.getElementById('canvas-container');
+        
+        // 1. Scene setup
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020617, 0.0025); // Slightly thicker fog
+
+        // Camera setup
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 150;
+        camera.position.y = 20;
+
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // 2. Cyberspace Grid Floor
+        const gridHelper = new THREE.GridHelper(1000, 60, 0x0ea5e9, 0x0f172a);
+        gridHelper.position.y = -80;
+        gridHelper.material.opacity = 0.3;
+        gridHelper.material.transparent = true;
+        scene.add(gridHelper);
+
+        // 3. Particle Network
+        const particleCount = window.innerWidth < 768 ? 150 : 350;
+        const particles = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const velocities = [];
+
+        for (let i = 0; i < particleCount; i++) {
+            positions[i * 3] = (Math.random() - 0.5) * 600;     
+            positions[i * 3 + 1] = (Math.random() - 0.5) * 600; 
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 600; 
+
+            velocities.push({
+                x: (Math.random() - 0.5) * 0.3,
+                y: (Math.random() - 0.5) * 0.3,
+                z: (Math.random() - 0.5) * 0.3
+            });
+        }
+
+        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const pMaterial = new THREE.PointsMaterial({
+            color: 0x0ea5e9, 
+            size: 2,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+
+        const particleSystem = new THREE.Points(particles, pMaterial);
+        scene.add(particleSystem);
+
+        const lineMaterial = new THREE.LineBasicMaterial({
+            color: 0x2dd4bf, 
+            transparent: true,
+            opacity: 0.15
+        });
+
+        let linesMesh;
+
+        // 4. Floating 3D Geometries with Organic Movement
+        const geometriesArray = [];
+        const shapeGeos = [
+            new THREE.IcosahedronGeometry(12, 0),
+            new THREE.OctahedronGeometry(15, 0),
+            new THREE.TetrahedronGeometry(10, 0),
+            new THREE.TorusKnotGeometry(8, 2, 64, 8) // Added a complex shape
+        ];
+        
+        const shapeMat = new THREE.MeshBasicMaterial({ 
+            color: 0x8b5cf6, 
+            wireframe: true, 
+            transparent: true, 
+            opacity: 0.4
+        });
+
+        for(let i=0; i < 15; i++) {
+            const mesh = new THREE.Mesh(shapeGeos[Math.floor(Math.random() * shapeGeos.length)], shapeMat);
+            mesh.position.set(
+                (Math.random() - 0.5) * 500,
+                (Math.random() - 0.5) * 300,
+                (Math.random() - 0.5) * 500
+            );
+            scene.add(mesh);
+            geometriesArray.push({
+                mesh: mesh,
+                rx: (Math.random() - 0.5) * 0.02,
+                ry: (Math.random() - 0.5) * 0.02,
+                baseY: mesh.position.y,
+                offset: Math.random() * Math.PI * 2 // Offset for sine wave
+            });
+        }
+
+        // Mouse & Scroll Interaction Variables
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+        let scrollY = 0;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - window.innerWidth / 2);
+            mouseY = (event.clientY - window.innerHeight / 2);
+        });
+
+        window.addEventListener('scroll', () => {
+            scrollY = window.scrollY;
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Scroll-Driven Camera 
+            const targetCameraZ = 150 - (scrollY * 0.1);
+            camera.position.z += (targetCameraZ - camera.position.z) * 0.05;
+
+            // Parallax mouse effect on camera
+            targetX = mouseX * 0.05;
+            targetY = mouseY * 0.05;
+            camera.position.x += (targetX - camera.position.x) * 0.02;
+            camera.position.y += (-targetY - (camera.position.y - 20)) * 0.02; 
+            
+            camera.lookAt(scene.position.x, scene.position.y, scene.position.z - 100);
+
+            // Move Network Particles
+            const positionsArray = particleSystem.geometry.attributes.position.array;
+            for (let i = 0; i < particleCount; i++) {
+                positionsArray[i * 3] += velocities[i].x;
+                positionsArray[i * 3 + 1] += velocities[i].y;
+                positionsArray[i * 3 + 2] += velocities[i].z;
+
+                if (Math.abs(positionsArray[i * 3]) > 300) velocities[i].x *= -1;
+                if (Math.abs(positionsArray[i * 3 + 1]) > 300) velocities[i].y *= -1;
+                if (Math.abs(positionsArray[i * 3 + 2]) > 300) velocities[i].z *= -1;
+            }
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+            particleSystem.rotation.y += 0.0005;
+
+            // Rotate and Float Shapes
+            const time = Date.now() * 0.001;
+            geometriesArray.forEach(obj => {
+                obj.mesh.rotation.x += obj.rx;
+                obj.mesh.rotation.y += obj.ry;
+                // Organic floating up and down
+                obj.mesh.position.y = obj.baseY + Math.sin(time * 2 + obj.offset) * 15;
+            });
+
+            // Smooth Continuous Grid Flow (Always moving + scroll speed)
+            gridHelper.position.z = (Date.now() * 0.015 + scrollY * 0.1) % 60; 
+
+            updateLines();
+            renderer.render(scene, camera);
+        }
+
+        function updateLines() {
+            if (linesMesh) {
+                scene.remove(linesMesh);
+                linesMesh.geometry.dispose();
+            }
+
+            const positionsArray = particleSystem.geometry.attributes.position.array;
+            const linePositions = [];
+            
+            for (let i = 0; i < particleCount; i++) {
+                for (let j = i + 1; j < particleCount; j+=2) {
+                    const dx = positionsArray[i * 3] - positionsArray[j * 3];
+                    const dy = positionsArray[i * 3 + 1] - positionsArray[j * 3 + 1];
+                    const dz = positionsArray[i * 3 + 2] - positionsArray[j * 3 + 2];
+                    const distSq = dx * dx + dy * dy + dz * dz;
+
+                    if (distSq < 4000) { 
+                        linePositions.push(
+                            positionsArray[i * 3], positionsArray[i * 3 + 1], positionsArray[i * 3 + 2],
+                            positionsArray[j * 3], positionsArray[j * 3 + 1], positionsArray[j * 3 + 2]
+                        );
+                    }
+                }
+            }
+
+            if (linePositions.length > 0) {
+                const lineGeometry = new THREE.BufferGeometry();
+                lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+                linesMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
+                linesMesh.rotation.copy(particleSystem.rotation);
+                scene.add(linesMesh);
+            }
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+
+    <!-- UI Interactions Script -->
+    <script>
+        // --- TYPING EFFECT ---
+        const textToType = "Bridging the gap between code and production.";
+        const typingElement = document.getElementById('typing-text');
+        let textIndex = 0;
+        
+        function typeText() {
+            if (textIndex < textToType.length) {
+                typingElement.innerHTML += textToType.charAt(textIndex);
+                textIndex++;
+                setTimeout(typeText, 60); // Typing speed
+            }
+        }
+        
+        // Start typing after initial fade-in delay
+        setTimeout(typeText, 1200);
+
+        // --- 3D TILT EFFECT ON UI CARDS ---
+        const interactiveCards = document.querySelectorAll('.interactive-card');
+        
+        interactiveCards.forEach(card => {
+            if(card.classList.contains('tilt-disabled')) return;
+
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left; 
+                const y = e.clientY - rect.top;  
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                // Reduced rotation intensity for a smoother, less aggressive feel
+                const rotateX = ((y - centerY) / centerY) * -6;
+                const rotateY = ((x - centerX) / centerX) * 6;
+                
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                card.style.border = '1px solid rgba(255,255,255,0.3)';
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+                card.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+            });
+        });
+
+        // Mobile Menu Toggle
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+
+        menu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                menu.classList.add('hidden');
+            });
+        });
+
+        // Add background to navbar on scroll
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow-lg', 'bg-brand-dark/80');
+                nav.classList.remove('bg-transparent');
+            } else {
+                nav.classList.remove('shadow-lg', 'bg-brand-dark/80');
+                nav.classList.add('bg-transparent');
+            }
+        });
+
+        // Scroll Reveal Animations
+        const revealElements = document.querySelectorAll('.reveal');
+        
+        const revealCallback = (entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        };
+
+        const revealOptions = {
+            threshold: 0.15,
+            rootMargin: "0px 0px -50px 0px"
+        };
+
+        const revealObserver = new IntersectionObserver(revealCallback, revealOptions);
+        revealElements.forEach(el => revealObserver.observe(el));
+    </script>
+</body>
+</html>
